@@ -1,4 +1,4 @@
-import Layout from '../components/Layout';
+import Layout from '../../components/Layout';
 import { MdEdit } from 'react-icons/md';
 import { FaTrashAlt } from 'react-icons/fa';
 
@@ -15,10 +15,10 @@ export default function AdminDashboard() {
     <Layout sidebar={true}>
       <div className="max-w-4xl min-w-4xl flex flex-col items-center gap-5 pt-8">
         <div className="w-full flex flex-col gap-8 items-start">
-          <h1 className="text-3xl text-gray-900">
+          <h1 className="text-3xl text-gray-950">
             Painel de Administrador - Gestão de Operadores
           </h1>
-          <button className="bg-amber-300 pl-5 pr-5 pt-1.5 pb-1.5 rounded-[5px] cursor-pointer hover:bg-amber-400 transition">
+          <button className="bg-amber-300 text-sky-950 pl-5 pr-5 pt-1.5 pb-1.5 rounded-[5px] cursor-pointer hover:bg-amber-400 transition">
             Cadastrar Operador
           </button>
         </div>
