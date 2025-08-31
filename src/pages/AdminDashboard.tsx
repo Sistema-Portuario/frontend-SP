@@ -1,7 +1,6 @@
 import Layout from '../components/Layout';
-import { MdEdit } from "react-icons/md";
-import { FaTrashAlt } from "react-icons/fa";
-
+import { MdEdit } from 'react-icons/md';
+import { FaTrashAlt } from 'react-icons/fa';
 
 export default function AdminDashboard() {
   const users = [
@@ -28,25 +27,39 @@ export default function AdminDashboard() {
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
-                <th className=" border border-gray-200 px-4 py-2 text-left text-gray-700">Nome</th>
-                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">E-mail</th>
-                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">Status</th>
-                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">Ações</th>
+                <th className=" border border-gray-200 px-4 py-2 text-left text-gray-700">
+                  Nome
+                </th>
+                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
+                  E-mail
+                </th>
+                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
+                  Status
+                </th>
+                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody>
               {users.map((user, index) => (
                 <tr key={index} className="border-t border-gray-200">
-                  <td className="border border-gray-200 px-4 py-2">{user.nome}</td>
-                  <td className="border border-gray-200 px-4 py-2">{user.email}</td>
-                  <td className="border border-gray-200 px-4 py-2">{user.status}</td>
                   <td className="border border-gray-200 px-4 py-2">
-                    <div className='flex justify-center items-center gap-5'>
+                    {user.nome}
+                  </td>
+                  <td className="border border-gray-200 px-4 py-2">
+                    {user.email}
+                  </td>
+                  <td className="border border-gray-200 px-4 py-2">
+                    {user.status}
+                  </td>
+                  <td className="border border-gray-200 px-4 py-2">
+                    <div className="flex justify-center items-center gap-5">
                       <button className="text-blue-500 hover:text-blue-700 flex items-center justify-center cursor-pointer">
-                        <MdEdit color='black' size={20}/>
+                        <MdEdit color="black" size={20} />
                       </button>
                       <button className="text-red-500 hover:text-red-700 flex items-center justify-center cursor-pointer">
-                        <FaTrashAlt size={20}/>
+                        <FaTrashAlt size={20} />
                       </button>
                     </div>
                   </td>
