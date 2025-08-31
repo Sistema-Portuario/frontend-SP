@@ -75,16 +75,22 @@ export default function AdminDashboard() {
           <h1 className="text-3xl text-gray-950">
             Painel de Administrador - Gestão de Operadores
           </h1>
-          <button className="bg-amber-300 text-sky-950 pl-5 pr-5 pt-1.5 pb-1.5 rounded-[5px] cursor-pointer hover:bg-amber-400 transition"
-            onClick={() => setOpen(true)}> Cadastrar Operador
-          </button>
+          <button
+            className="bg-amber-300 text-sky-950 pl-5 pr-5 pt-1.5 pb-1.5 rounded-[5px] cursor-pointer hover:bg-amber-400 transition"
+            onClick={() => {
+              setNome("");
+              setEmail("");
+              setCargo("");
+              setStatus("Ativo"); // reseta também o status
+              setEditingIndex(null); // indica que é cadastro, não edição
+              setOpen(true);
+          }}>  Cadastrar Operador </button>
           {open && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
               <div className="w-full max-w-sm rounded-none bg-white p-6 shadow-lg">
                 <h2 className="mb-4 text-center text-lg font-normal text-black">
-                  Cadastrar Operador
+                  {editingIndex !== null ? "Editar Operador" : "Cadastrar Operador"}
                 </h2>
-
                 <form onSubmit={handleSave} className="space-y-3">
                   <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome completo"
                   className="w-full rounded-[5px] border border-[#C4C4C4] px-3 py-2 text-sm text-black placeholder-[#C4C4C4] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#C4C4C4] focus:border-[#C4C4C4]"/>
