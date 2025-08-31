@@ -81,8 +81,8 @@ export default function AdminDashboard() {
               setNome("");
               setEmail("");
               setCargo("");
-              setStatus("Ativo"); // reseta também o status
-              setEditingIndex(null); // indica que é cadastro, não edição
+              setStatus("Ativo");
+              setEditingIndex(null);
               setOpen(true);
           }}>  Cadastrar Operador </button>
           {open && (
