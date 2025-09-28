@@ -1,17 +1,37 @@
-import React from "react";
-import logo from "../assets/logo.png";
+import React, { useState } from 'react';
+import logo from '../assets/logo.png';
+import { useAuth } from '../../context/authContext/authProvider';
+import { useNavigate } from 'react-router-dom';
+
 const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const { state, dispatch } = useAuth();
+  const navigate = useNavigate();
+
+  const userLogin = (e) => {
+    e.preventDefault();
+
+    const userCredentials = {
+      email,
+      password,
+    };
+
+    login(userCredentials, dispatch);
+
+    navigate('/');
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#EDEDE9]">
       <div className="bg-[#21496D] p-8 rounded-lg shadow-md w-96 text-center">
-
         <div className="flex justify-center mb-4">
           <img
-        src={logo}
-        alt="Logo"
-        className="w-30 h-30 rounded-full bg-white p-2"
-      />
-
+            src={logo}
+            alt="Logo"
+            className="w-30 h-30 rounded-full bg-white p-2"
+          />
         </div>
 
         <h2 className="text-white text-lg mb-6">Sistema Portuário</h2>

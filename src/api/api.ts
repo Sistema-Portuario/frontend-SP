@@ -1,13 +1,13 @@
-const handleResponse = async (response) => {
+const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message);
+    throw new Error(errorData.message || 'Erro desconhecido');
   }
 
-  return response.json();
+  return response.json() as Promise<T>;
 };
 
-export const postRequest = async (url, data) => {
+export const postRequest = async <T, U>(url: string, data: U): Promise<T> =>  {
 
   try {
     const response = await fetch(url, {
@@ -19,8 +19,15 @@ export const postRequest = async (url, data) => {
       body: JSON.stringify(data),
     });
 
-    return await handleResponse(response);
-  } catch (error) {
-    throw new Error(error.message);
+    return await handleResponse<T>(response);
+
+  } catch (error: unknown) {
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+
+    throw new Error('Erro desconhecido');
+    
   }
 };
