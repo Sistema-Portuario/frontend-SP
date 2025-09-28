@@ -1,4 +1,4 @@
-import React, { useState, type MouseEvent } from 'react';
+import React, { useEffect, useState, type MouseEvent } from 'react';
 import logo from '../../assets/logo.png';
 import { useAuth } from '../../context/authContext/authProvider';
 import { useNavigate } from 'react-router-dom';
@@ -8,10 +8,22 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { dispatch } = useAuth();
+  const { dispatch, state } = useAuth();
   const navigate = useNavigate();
 
-  const userLogin = (e: MouseEvent<HTMLButtonElement>) => {
+  useEffect(() => {
+
+    if (state.authenticate) {
+      if (state.user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (state.user.role === 'employee') {
+        navigate('/employee', { replace: true });
+      }
+    }
+
+  }, [state, navigate]);
+
+  const userLogin = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     const userCredentials = {
@@ -19,10 +31,20 @@ const Login: React.FC = () => {
       password,
     };
 
-    login(userCredentials, dispatch);
+    const user = await login(userCredentials, dispatch);
 
-    navigate('/');
-    
+    if (!user) return;
+
+    if (user.role === 'admin' && user.email === 'admin@nome-da-empresa') {
+      navigate('/admin', { replace: true });
+    } else if (
+      user.role === 'employee' &&
+      user.email.endsWith('@nome-da-empresa')
+    ) {
+      navigate('/employee', { replace: true });
+    } else {
+      navigate('/login', { replace: true });
+    }
   };
 
   return (

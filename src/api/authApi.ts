@@ -41,6 +41,9 @@ export const login = async (
         user,
       },
     });
+
+    return user;
+
   } catch (error) {
     if (error instanceof Error) {
       dispatch({
