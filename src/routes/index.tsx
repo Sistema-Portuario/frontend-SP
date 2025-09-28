@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import AdminDashboard from '../pages/AdminDashboard';
-import Login from '../pages/login';
+import Login from '../pages/Login/login';
 
 export const RoutesApp = () => {
   return (
