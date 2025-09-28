@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import logo from '../assets/logo.png';
+import React, { useState, type MouseEvent } from 'react';
+import logo from '../../assets/logo.png';
 import { useAuth } from '../../context/authContext/authProvider';
 import { useNavigate } from 'react-router-dom';
+import { login } from '../../api/authApi';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { state, dispatch } = useAuth();
+  const { dispatch } = useAuth();
   const navigate = useNavigate();
 
-  const userLogin = (e) => {
+  const userLogin = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     const userCredentials = {
@@ -21,6 +22,7 @@ const Login: React.FC = () => {
     login(userCredentials, dispatch);
 
     navigate('/');
+    
   };
 
   return (
@@ -38,18 +40,25 @@ const Login: React.FC = () => {
 
         <div className="space-y-4">
           <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             type="email"
             placeholder="E-mail"
             className="w-full px-3 py-2 rounded-md border bg-[#EDEDE9] border-gray-300 focus:outline-none focus:ring focus:ring-yellow-400"
           />
           <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             type="password"
             placeholder="Senha"
             className="w-full px-3 py-2 rounded-md border bg-[#EDEDE9] border-gray-300 focus:outline-none focus:ring focus:ring-yellow-400"
           />
         </div>
 
-        <button className="mt-6 bg-[#F1D821] hover:bg-yellow-500 text-black font-medium px-6 py-2 rounded-md w-full cursor-pointer">
+        <button
+          onClick={userLogin}
+          className="mt-6 bg-[#F1D821] hover:bg-yellow-500 text-black font-medium px-6 py-2 rounded-md w-full cursor-pointer"
+        >
           Login
         </button>
       </div>
