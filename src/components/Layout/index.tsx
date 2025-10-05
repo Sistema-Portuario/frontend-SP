@@ -12,7 +12,7 @@ export default function Layout({ children, sidebar = false }: LayoutProps) {
       <div className="flex w-full h-full">
         {sidebar && <Sidebar />}
 
-        <div className=" w-full flex flex-col items-center">
+        <div className="w-full flex flex-col items-center">
           {children}
         </div>
 
