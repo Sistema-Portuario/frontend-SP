@@ -1,6 +1,7 @@
 import Layout from '../../components/Layout';
 import { MdEdit } from 'react-icons/md';
 import { FaTrashAlt } from 'react-icons/fa';
+
 import { useState } from "react";
 import type { FormEvent } from "react";
 
@@ -179,6 +180,9 @@ export default function AdminDashboard() {
                   E-mail
                 </th>
                 <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
+                  Cargo
+                </th>
+                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
                   Status
                 </th>
                 <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
@@ -194,6 +198,9 @@ export default function AdminDashboard() {
                   </td>
                   <td className="border border-gray-200 px-4 py-2">
                     {user.email}
+                  </td>
+                  <td className="border border-gray-200 px-4 py-2">
+                    {user.cargo}
                   </td>
                   <td className="border border-gray-200 px-4 py-2">
                     {user.status}
