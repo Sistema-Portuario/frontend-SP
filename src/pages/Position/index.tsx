@@ -41,6 +41,20 @@ export default function Positions() {
       return;
     }
 
+    // Verificação de duplicata
+    const isDuplicate = positionsList.some((position, idx) => {
+      return (
+        position.nome.toLowerCase() === nome.toLowerCase() &&
+        idx !== editingIndex
+      );
+    });
+
+    if (isDuplicate) {
+      setError('Já existe um cargo com este nome.');
+      setTimeout(() => setError(''), 4000);
+      return;
+    }
+
     setError('');
     setOpen(false);
     setSuccess(true);
@@ -152,6 +166,10 @@ export default function Positions() {
                           positionsList.filter((_, i) => i !== deleteIndex)
                         );
                         setDeleteIndex(null);
+
+                        // Mensagem de exclusão
+                        setSuccess(true);
+                        setTimeout(() => setSuccess(false), 3000);
                       }
                       setShowDeleteModal(false);
                     }}
