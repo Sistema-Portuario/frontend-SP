@@ -19,7 +19,7 @@ export default function PrivateRouteEmployee({
     if (!token) navigate('/login', { replace: true });
 
     if (user.role !== 'employee') {
-      navigate('/admin', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
 

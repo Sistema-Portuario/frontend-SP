@@ -15,7 +15,7 @@ const Login: React.FC = () => {
 
     if (state.authenticate) {
       if (state.user.role === 'admin') {
-        navigate('/admin', { replace: true });
+        navigate('/', { replace: true });
       } else if (state.user.role === 'employee') {
         navigate('/employee', { replace: true });
       }
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
     if (!user) return;
 
     if (user.role === 'admin' && user.email === 'admin@nome-da-empresa') {
-      navigate('/admin', { replace: true });
+      navigate('/', { replace: true });
     } else if (
       user.role === 'employee' &&
       user.email.endsWith('@nome-da-empresa')

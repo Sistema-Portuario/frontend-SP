@@ -9,15 +9,10 @@ import Position from '../pages/Position';
 export const RoutesApp = () => {
   return (
     <Routes>
-      {/* <Route path="/admin" element={<PrivateRouteAdmin element={AdminDashboard}/>} />
-      <Route path="/employee" element={<PrivateRouteEmployee element={EmployeePage}/>} />
-      <Route path="/login" element={<Login />} /> */}
-      
-      <Route path="/admin" element={<AdminDashboard/>} />
-      <Route path="/employee" element={<Employee/>} />
-      <Route path="/positions" element={<Position/>} />
-      <Route path="/login" element={<Login />} />
-      
+      <Route path="/" element={<PrivateRouteAdmin element={AdminDashboard}/>} />
+      <Route path="/employee" element={<PrivateRouteEmployee element={Employee}/>} />
+      <Route path="/positions" element={<PrivateRouteEmployee element={Position}/>} />
+      <Route path="/login" element={<Login />} /> 
     </Routes>
   );
 };

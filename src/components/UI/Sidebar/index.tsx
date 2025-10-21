@@ -16,7 +16,7 @@ const Sidebar = () => {
       <ul className="flex flex-col p-4 space-y-2 mt-5 pl-7">
         <li>
           <NavLink
-            to="/admin"
+            to="/"
             className="block px-4 py-2 rounded hover:bg-sky-950 transition-colors"
           >
             <div className="flex justify-start items-center gap-3.5">
@@ -27,7 +27,7 @@ const Sidebar = () => {
         </li>
         <li>
           <NavLink
-            to="/admin"
+            to="/"
             className="block px-4 py-2 rounded hover:bg-sky-950 transition-colors"
           >
             <div className="flex justify-start items-center gap-3.5">
