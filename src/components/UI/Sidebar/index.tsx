@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { FaHome } from 'react-icons/fa';
 import { IoMdPerson } from 'react-icons/io';
-import { FaBell } from 'react-icons/fa';
 import { MdWork } from "react-icons/md";
 
 import logo from '../../../assets/logo.png';
@@ -27,7 +26,7 @@ const Sidebar = () => {
         </li>
         <li>
           <NavLink
-            to="/"
+            to="/operators"
             className="block px-4 py-2 rounded hover:bg-sky-950 transition-colors"
           >
             <div className="flex justify-start items-center gap-3.5">
@@ -44,18 +43,6 @@ const Sidebar = () => {
             <div className="flex justify-start items-center gap-3.5">
               <MdWork size={24} color="#F1D821" />
               Cargos
-            </div>
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink
-            to="#"
-            className="block px-4 py-2 rounded hover:bg-sky-950 transition-colors"
-          >
-            <div className="flex justify-start items-center gap-3.5">
-              <FaBell size={24} color="#F1D821" />
-              Lorem ipsum
             </div>
           </NavLink>
         </li>

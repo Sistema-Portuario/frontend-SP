@@ -17,17 +17,17 @@ export default function PrivateRouteAdmin({
   const { user } = state;
 
   useEffect(() => {
-    if (!token) navigate('/login', { replace: true });
+    if (!state.authenticate) navigate('/login', { replace: true });
 
     if (user.role !== 'admin') {
       navigate('/employee', { replace: true });
       return;
     }
 
-  }, [token, user, navigate]);
+  }, [token, user, state.authenticate, navigate]);
 
   // evita renderizar enquanto redireciona
-  if (!token || user.role !== 'admin') return null;
+  if (!state.authenticate || user.role !== 'admin') return null;
 
   return <Component />;
 }
