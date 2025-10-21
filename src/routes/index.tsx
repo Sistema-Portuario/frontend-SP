@@ -12,8 +12,8 @@ export const RoutesApp = () => {
     <Routes>
       <Route path="/" element={<PrivateRouteAdmin element={AdminDashboard}/>} />
       <Route path="/operators" element={<PrivateRouteAdmin element={Operators}/>} />
+      <Route path="/positions" element={<PrivateRouteAdmin element={Position}/>} />
       <Route path="/employee" element={<PrivateRouteEmployee element={Employee}/>} />
-      <Route path="/positions" element={<PrivateRouteEmployee element={Position}/>} />
       <Route path="/login" element={<Login />} /> 
     </Routes>
   );
