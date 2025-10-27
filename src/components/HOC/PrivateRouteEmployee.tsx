@@ -16,17 +16,17 @@ export default function PrivateRouteEmployee({
   const { user } = state;
 
   useEffect(() => {
-    if (!token) navigate('/login', { replace: true });
+    if (!state.authenticate) navigate('/login', { replace: true });
 
     if (user.role !== 'employee') {
       navigate('/', { replace: true });
       return;
     }
 
-  }, [token, user, navigate]);
+  }, [token, user, state.authenticate, navigate]);
 
   // evita renderizar enquanto redireciona
-  if (!token || user.role !== 'employee') return null;
+  if (!state.authenticate || user.role !== 'employee') return null;
 
   return <Component />;
 }
