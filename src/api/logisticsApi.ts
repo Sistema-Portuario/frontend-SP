@@ -1,9 +1,9 @@
 import { getRequest } from './api';
 
 export interface LogisticsStats {
-  naviosChegaram: number;
-  naviosSairam: number;
-  containersNoPatio: number;
+  naviosChegados: number;
+  naviosSaidos: number;
+  containersPatio: number;
   caminhoesAtivos: number;
 }
 
