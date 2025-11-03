@@ -27,10 +27,10 @@ import { getLogisticsStats, type LogisticsStats } from '../../api/logisticsApi';
 
 const AdminDashboard = () => {
   const [data, setData] = useState<LogisticsStats>({
-    naviosChegados: 0,
-    naviosSaidos: 0,
-    containersPatio: 0,
-    caminhoesAtivos: 0,
+    naviosChegados: 18,
+    naviosSaidos: 14,
+    containersPatio: 22,
+    caminhoesAtivos: 40,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,120 +109,120 @@ const AdminDashboard = () => {
 
   return (
     <Layout sidebar={true}>
-      <div className="min-h-screen w-full overflow-auto">
-        {/* Header */}
-        <div className="relative z-10 px-8 py-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>Páginas</span>
-              <span>/</span>
-              <span className="font-medium text-gray-700">Dashboard</span>
+      <div className="flex h-full w-full flex-col overflow-hidden">
+        <div className='flex-shrink-0'>
+          {/* Header */}
+          <div className="relative z-10 px-8 py-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span>Páginas</span>
+                <span>/</span>
+                <span className="font-medium text-gray-700">Dashboard</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowSettings(!showSettings)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                  title="Configurações"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={fetchDashboardData}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+                  />
+                  Atualizar
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                title="Configurações"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-              <button
-                onClick={fetchDashboardData}
-                disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
-                />
-                Atualizar
-              </button>
-            </div>
-          </div>
-          <h1 className="text-xl font-bold text-gray-800 mb-1">
-            Dashboard Operacional
-          </h1>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">
-              Acompanhamento em tempo real do sistema portuário
-            </p>
-            {lastUpdate && (
-              <p className="text-xs text-gray-400">
-                Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
+            <h1 className="text-xl font-bold text-gray-800 mb-1">
+              Dashboard Operacional
+            </h1>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-500">
+                Acompanhamento em tempo real do sistema portuário
               </p>
-            )}
+              {lastUpdate && (
+                <p className="text-xs text-gray-400">
+                  Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <div className="relative z-10 px-8 pb-4">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-blue-100">
-              <h3 className="text-sm font-semibold text-gray-800 mb-4">
-                Configurações de Atualização
-              </h3>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <label className="text-sm text-gray-600">
-                    Auto-atualizar:
-                  </label>
-                  <button
-                    onClick={() => setAutoRefresh(!autoRefresh)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      autoRefresh ? 'bg-green-500' : 'bg-gray-300'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        autoRefresh ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-sm font-medium text-gray-700">
-                    {autoRefresh ? 'Ativado' : 'Desativado'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <label className="text-sm text-gray-600">Intervalo:</label>
-                  <select
-                    value={refreshInterval}
-                    onChange={(e) => setRefreshInterval(Number(e.target.value))}
-                    disabled={!autoRefresh}
-                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value={10}>10 segundos</option>
-                    <option value={30}>30 segundos</option>
-                    <option value={60}>1 minuto</option>
-                    <option value={300}>5 minutos</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error Alert */}
-        {error && (
-          <div className="relative z-10 px-8 pb-4">
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-red-900 text-sm">
-                  Erro de Comunicação
-                </h3>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
-              </div>
-              <button
-                onClick={() => setError(null)}
-                className="text-red-400 hover:text-red-600 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Content */}
-        <div className="relative z-10 px-8 py-4">
+        <div className="flex-1 overflow-y-auto p-8">
+          {/* Settings Panel */}
+          {showSettings && (
+            <div className="relative z-10 pb-4">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-blue-100">
+                <h3 className="text-sm font-semibold text-gray-800 mb-4">
+                  Configurações de Atualização
+                </h3>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-gray-600">
+                      Auto-atualizar:
+                    </label>
+                    <button
+                      onClick={() => setAutoRefresh(!autoRefresh)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        autoRefresh ? 'bg-green-500' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          autoRefresh ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm font-medium text-gray-700">
+                      {autoRefresh ? 'Ativado' : 'Desativado'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-gray-600">Intervalo:</label>
+                    <select
+                      value={refreshInterval}
+                      onChange={(e) => setRefreshInterval(Number(e.target.value))}
+                      disabled={!autoRefresh}
+                      className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value={10}>10 segundos</option>
+                      <option value={30}>30 segundos</option>
+                      <option value={60}>1 minuto</option>
+                      <option value={300}>5 minutos</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Error Alert */}
+          {error && (
+            <div className="relative z-10 pb-4">
+              <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900 text-sm">
+                    Erro de Comunicação
+                  </h3>
+                  <p className="text-sm text-red-700 mt-1">{error}</p>
+                </div>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-red-400 hover:text-red-600 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
           {/* Stats Cards - Indicadores Principais */}
           <div className="grid grid-cols-4 gap-6 mb-8">
             {/* Navios Chegados */}
