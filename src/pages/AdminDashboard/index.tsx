@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Ship,
   Package,
@@ -38,7 +40,7 @@ const AdminDashboard = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   // Dados históricos para gráficos
-  const [historicalNavios, setHistoricalNavios] = useState([
+  const historicalNavios = [
     { day: 'Seg', chegados: 15, saidos: 12 },
     { day: 'Ter', chegados: 18, saidos: 14 },
     { day: 'Qua', chegados: 22, saidos: 19 },
@@ -46,9 +48,9 @@ const AdminDashboard = () => {
     { day: 'Sex', chegados: 25, saidos: 22 },
     { day: 'Sáb', chegados: 16, saidos: 15 },
     { day: 'Dom', chegados: 19, saidos: 16 },
-  ]);
+  ];
 
-  const [historicalContainers, setHistoricalContainers] = useState([
+  const historicalContainers = [
     { day: 'Seg', quantidade: 520 },
     { day: 'Ter', quantidade: 580 },
     { day: 'Qua', quantidade: 550 },
@@ -56,9 +58,9 @@ const AdminDashboard = () => {
     { day: 'Sex', quantidade: 590 },
     { day: 'Sáb', quantidade: 480 },
     { day: 'Dom', quantidade: 510 },
-  ]);
+  ];
 
-  const [historicalCaminhoes, setHistoricalCaminhoes] = useState([
+  const historicalCaminhoes = [
     { day: 'Seg', ativos: 35 },
     { day: 'Ter', ativos: 42 },
     { day: 'Qua', ativos: 38 },
@@ -66,17 +68,19 @@ const AdminDashboard = () => {
     { day: 'Sex', ativos: 40 },
     { day: 'Sáb', ativos: 28 },
     { day: 'Dom', ativos: 32 },
-  ]);
+  ];
 
   const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
 
+    // o certo é dentro do try, tá aqui só por efeito de teste e visualização
+    setLastUpdate(new Date());
+
     try {
       const apiData = await getLogisticsStats();
 
       setData(apiData);
-      setLastUpdate(new Date());
     } catch (error) {
       setError(
         'Falha na comunicação com o servidor. Verifique a conexão e tente novamente.'
@@ -117,7 +121,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                 title="Configurações"
               >
                 <Settings className="w-5 h-5" />
@@ -125,7 +129,7 @@ const AdminDashboard = () => {
               <button
                 onClick={fetchDashboardData}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
@@ -209,7 +213,7 @@ const AdminDashboard = () => {
               </div>
               <button
                 onClick={() => setError(null)}
-                className="text-red-400 hover:text-red-600"
+                className="text-red-400 hover:text-red-600 cursor-pointer"
               >
                 ✕
               </button>
@@ -346,9 +350,15 @@ const AdminDashboard = () => {
                   />
                 </BarChart>
               </ResponsiveContainer>
-              <p className="text-xs text-gray-400 mt-3">
-                🕐 atualizado há {Math.floor(Math.random() * 10) + 1} min
-              </p>
+              {lastUpdate && (
+                <p className="text-xs text-gray-400 mt-3">
+                  🕐 atualizado há{' '}
+                  {formatDistanceToNow(lastUpdate, {
+                    addSuffix: true,
+                    locale: ptBR,
+                  })}
+                </p>
+              )}
             </div>
 
             {/* Contêineres no Pátio */}
@@ -386,9 +396,15 @@ const AdminDashboard = () => {
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <p className="text-xs text-gray-400 mt-3">
-                🕐 atualizado há {Math.floor(Math.random() * 5) + 1} min
-              </p>
+              {lastUpdate && (
+                <p className="text-xs text-gray-400 mt-3">
+                  🕐 atualizado há{' '}
+                  {formatDistanceToNow(lastUpdate, {
+                    addSuffix: true,
+                    locale: ptBR,
+                  })}
+                </p>
+              )}
             </div>
 
             {/* Caminhões em Operação */}
@@ -426,7 +442,15 @@ const AdminDashboard = () => {
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <p className="text-xs text-gray-400 mt-3">🕐 atualizado agora</p>
+              {lastUpdate && (
+                <p className="text-xs text-gray-400 mt-3">
+                  🕐 atualizado há{' '}
+                  {formatDistanceToNow(lastUpdate, {
+                    addSuffix: true,
+                    locale: ptBR,
+                  })}
+                </p>
+              )}
             </div>
           </div>
 
@@ -465,10 +489,10 @@ const AdminDashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-base font-bold text-gray-800 mb-1">
-                    Atividades Recentes
+                    Log de Atualização
                   </h3>
                   <p className="text-xs text-gray-500">
-                    Últimas operações registradas
+                    Últimos dados recebidos pelo sistema
                   </p>
                 </div>
                 <button className="text-gray-400 hover:text-gray-600">
@@ -477,50 +501,48 @@ const AdminDashboard = () => {
               </div>
               <div className="space-y-4 mt-6">
                 <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full mt-1.5"></div>
                   <div>
                     <p className="text-sm font-medium text-gray-800">
                       Navio MV Ocean Star atracado
                     </p>
-                    <p className="text-xs text-gray-400">
-                      Hoje às{' '}
-                      {new Date().toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
+                    <p className="text-xs text-gray-400">Hoje às 08:30</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">
-                      {data.containersPatio} contêineres processados
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Hoje às{' '}
-                      {new Date(Date.now() - 3600000).toLocaleTimeString(
-                        'pt-BR',
-                        { hour: '2-digit', minute: '2-digit' }
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">
-                      {data.caminhoesAtivos} caminhões em operação
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Hoje às{' '}
-                      {new Date(Date.now() - 7200000).toLocaleTimeString(
-                        'pt-BR',
-                        { hour: '2-digit', minute: '2-digit' }
-                      )}
-                    </p>
-                  </div>
-                </div>
+
+                {lastUpdate && (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-1.5"></div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">
+                          Registro de {data.containersPatio} contêineres no
+                          pátio
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {formatDistanceToNow(lastUpdate, {
+                            addSuffix: true,
+                            locale: ptBR,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">
+                          Registro de {data.caminhoesAtivos} caminhões ativos
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {formatDistanceToNow(lastUpdate, {
+                            addSuffix: true,
+                            locale: ptBR,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
