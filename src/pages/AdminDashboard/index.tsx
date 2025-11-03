@@ -156,7 +156,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-8 pt-5">
           {/* Settings Panel */}
           {showSettings && (
             <div className="relative z-10 pb-4">
