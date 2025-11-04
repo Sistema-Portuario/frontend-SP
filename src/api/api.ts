@@ -31,3 +31,22 @@ export const postRequest = async <T, U>(url: string, data: U): Promise<T> =>  {
     
   }
 };
+
+export const getRequest = async <T>(url: string): Promise<T> => {
+
+  try {
+
+    const response = await fetch(url);
+
+    return await handleResponse<T>(response);
+
+  } catch (error: unknown) {
+
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+
+    throw new Error('Erro desconhecido');
+  }
+
+};

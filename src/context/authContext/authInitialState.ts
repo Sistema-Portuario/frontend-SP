@@ -5,11 +5,11 @@ export const authInitialState = {
     name: '',
     password: '',
     email: '',
-    role: '',
+    role: 'admin',
     position: '',
   },
 
-  authenticate: false,
+  authenticate: true,
   authenticating: false,
   loading: false,
   error: '',
