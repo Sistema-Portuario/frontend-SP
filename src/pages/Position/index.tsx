@@ -1,38 +1,42 @@
 import Layout from '../../components/Layout';
 import { MdEdit } from 'react-icons/md';
 import { FaTrashAlt } from 'react-icons/fa';
-import { useState } from 'react';
-import type { FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { getCargos, createCargo, updateCargo, deleteCargo, type Cargo } from '../../api/cargoApi';
 
 export default function Positions() {
   const [open, setOpen] = useState<boolean>(false);
-  const [success, setSuccess] = useState<boolean>(false);
+  const [success, setSuccess] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true); // Estado de loading
+
   const [nome, setNome] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
-  const [positionsList, setPositionsList] = useState([
-    {
-      nome: 'Cargo 1',
-      description:
-        'Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam laborum reprehenderit labore temporibus eius tenetur dolorem totam magni.',
-    },
-    {
-      nome: 'Cargo 2',
-      description:
-        'Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam laborum reprehenderit labore temporibus eius tenetur dolorem totam magni.',
-    },
-    {
-      nome: 'Cargo 3',
-      description:
-        'Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam laborum reprehenderit labore temporibus eius tenetur dolorem totam magni.',
-    },
-  ]);
+  const [positionsList, setPositionsList] = useState<Cargo[]>([]);
 
-  const handleSave = (e: FormEvent<HTMLFormElement>) => {
+  const fetchPositions = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getCargos();
+      setPositionsList(data);
+    } catch (err: any) {
+      setError(err.message || 'Falha ao buscar cargos.');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPositions();
+  }, []);
+
+  const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!nome || !description) {
@@ -41,7 +45,7 @@ export default function Positions() {
       return;
     }
 
-    // Verificação de duplicata
+    // Validação de duplicata (mantida)
     const isDuplicate = positionsList.some((position, idx) => {
       return (
         position.nome.toLowerCase() === nome.toLowerCase() &&
@@ -55,22 +59,53 @@ export default function Positions() {
       return;
     }
 
-    setError('');
-    setOpen(false);
-    setSuccess(true);
+    setError(''); // Limpa erros
 
-    if (editingIndex !== null) {
-      const updatedPositions = [...positionsList];
-      updatedPositions[editingIndex] = { nome, description };
-      setPositionsList(updatedPositions);
+    try {
+      if (editingIndex !== null) {
+
+        const cargoToUpdate = positionsList[editingIndex];
+        await updateCargo(cargoToUpdate.id, nome, description);
+        setSuccess('Cargo atualizado com sucesso!');
+
+      } else {
+        await createCargo(nome, description);
+        setSuccess('Cargo criado com sucesso!');
+      }
+
+      setOpen(false);
       setEditingIndex(null);
-    } else {
-      setPositionsList([...positionsList, { nome, description }]);
-    }
+      setNome('');
+      setDescription('');
+      await fetchPositions();
 
-    setNome('');
-    setDescription('');
-    setTimeout(() => setSuccess(false), 3000);
+      setTimeout(() => setSuccess(''), 3000);
+
+    } catch (err: any) {
+      setError(err.message || 'Falha ao salvar cargo.');
+      setTimeout(() => setError(''), 5000);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteIndex === null) return; // Segurança
+
+    try {
+      const cargoToDelete = positionsList[deleteIndex];
+      await deleteCargo(cargoToDelete.id);
+
+      setSuccess('Cargo excluído com sucesso!');
+      setTimeout(() => setSuccess(''), 3000);
+
+      setShowDeleteModal(false);
+      setDeleteIndex(null);
+      await fetchPositions(); // Recarrega a lista do banco
+
+    } catch (err: any) {
+      setError(err.message || 'Falha ao excluir o cargo.');
+      setTimeout(() => setError(''), 5000);
+      setShowDeleteModal(false);
+    }
   };
 
   return (
@@ -125,7 +160,10 @@ export default function Positions() {
                   <div className="mt-4 flex justify-center gap-3">
                     <button
                       type="button"
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        setOpen(false);
+                        setError('');
+                      }}
                       className="rounded-[5px] border border-[#C4C4C4] bg-white px-6 py-2 font-normal text-black shadow hover:bg-gray-100"
                     >
                       Cancelar
@@ -154,25 +192,16 @@ export default function Positions() {
                 <div className="flex justify-center gap-3">
                   <button
                     className="rounded-[5px] border border-[#C4C4C4] bg-white px-6 py-2 font-normal text-black shadow hover:bg-gray-100"
-                    onClick={() => setShowDeleteModal(false)}
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setDeleteIndex(null);
+                    }}
                   >
                     Cancelar
                   </button>
                   <button
                     className="rounded-[5px] bg-red-500 px-6 py-2 font-normal text-white shadow hover:opacity-90"
-                    onClick={() => {
-                      if (deleteIndex !== null) {
-                        setPositionsList(
-                          positionsList.filter((_, i) => i !== deleteIndex)
-                        );
-                        setDeleteIndex(null);
-
-                        // Mensagem de exclusão
-                        setSuccess(true);
-                        setTimeout(() => setSuccess(false), 3000);
-                      }
-                      setShowDeleteModal(false);
-                    }}
+                    onClick={handleConfirmDelete}
                   >
                     Excluir
                   </button>
@@ -183,64 +212,68 @@ export default function Positions() {
 
           {success && (
             <div className="fixed bottom-4 right-4 z-50 rounded-[5px] bg-[#F1D821] px-6 py-3 text-black shadow-lg">
-              {'\u2713'} Alterações salvas com sucesso!
+              {'\u2713'} {success}
             </div>
           )}
         </div>
 
-        <div className="w-full min-w-[600px] rounded-[5px] overflow-x-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className=" w-30 border border-gray-200 px-4 py-2 text-left text-gray-700">
-                  Nome
-                </th>
-                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
-                  Descrição
-                </th>
-                <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {positionsList.map((position, index) => (
-                <tr key={index} className="border-t border-gray-200">
-                  <td className="border border-gray-200 px-4 py-2">
-                    {position.nome}
-                  </td>
-                  <td className="border border-gray-200 px-4 py-2">
-                    {position.description}
-                  </td>
-                  <td className="border border-gray-200 px-4 py-2">
-                    <div className="flex justify-center items-center gap-5">
-                      <button
-                        className="text-blue-500 hover:text-blue-700 flex items-center justify-center cursor-pointer"
-                        onClick={() => {
-                          setNome(position.nome);
-                          setDescription(position.description);
-                          setEditingIndex(index);
-                          setOpen(true);
-                        }}
-                      >
-                        <MdEdit color="black" size={20} />
-                      </button>
-                      <button
-                        className="text-red-500 hover:text-red-700 flex items-center justify-center cursor-pointer"
-                        onClick={() => {
-                          setDeleteIndex(index);
-                          setShowDeleteModal(true);
-                        }}
-                      >
-                        <FaTrashAlt size={20} />
-                      </button>
-                    </div>
-                  </td>
+        {loading ? (
+          <p className="mt-10 text-gray-700">Carregando cargos...</p>
+        ) : (
+          <div className="w-full min-w-[600px] rounded-[5px] overflow-x-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className=" w-30 border border-gray-200 px-4 py-2 text-left text-gray-700">
+                    Nome
+                  </th>
+                  <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
+                    Descrição
+                  </th>
+                  <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
+                    Ações
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {positionsList.map((position, index) => (
+                  <tr key={position.id} className="border-t border-gray-200">
+                    <td className="border border-gray-200 px-4 py-2">
+                      {position.nome}
+                    </td>
+                    <td className="border border-gray-200 px-4 py-2">
+                      {position.descricao || '---'}
+                    </td>
+                    <td className="border border-gray-200 px-4 py-2">
+                      <div className="flex justify-center items-center gap-5">
+                        <button
+                          className="text-blue-500 hover:text-blue-700 flex items-center justify-center cursor-pointer"
+                          onClick={() => {
+                            setNome(position.nome);
+                            setDescription(position.descricao || '');
+                            setEditingIndex(index);
+                            Opening_Modal: setOpen(true);
+                          }}
+                        >
+                          <MdEdit color="black" size={20} />
+                        </button>
+                        <button
+                          className="text-red-500 hover:text-red-700 flex items-center justify-center cursor-pointer"
+                          onClick={() => {
+                            setDeleteIndex(index);
+                            setShowDeleteModal(true);
+                          }}
+                        >
+                          <FaTrashAlt size={20} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </Layout>
   );

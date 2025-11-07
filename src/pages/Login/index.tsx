@@ -5,14 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import { login } from '../../api/authApi';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const { dispatch, state } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-
     if (state.authenticate) {
       if (state.user.role === 'admin') {
         navigate('/', { replace: true });
@@ -20,14 +19,13 @@ const Login: React.FC = () => {
         navigate('/employee', { replace: true });
       }
     }
-
   }, [state, navigate]);
 
   const userLogin = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     const userCredentials = {
-      email,
+      username: username,
       password,
     };
 
@@ -35,12 +33,9 @@ const Login: React.FC = () => {
 
     if (!user) return;
 
-    if (user.role === 'admin' && user.email === 'admin@nome-da-empresa') {
+    if (user.role === 'admin') {
       navigate('/', { replace: true });
-    } else if (
-      user.role === 'employee' &&
-      user.email.endsWith('@nome-da-empresa')
-    ) {
+    } else if (user.role === 'employee') {
       navigate('/employee', { replace: true });
     } else {
       navigate('/login', { replace: true });
@@ -62,10 +57,10 @@ const Login: React.FC = () => {
 
         <div className="space-y-4">
           <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            placeholder="E-mail"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            type="text"
+            placeholder="Nome de Usuário"
             className="w-full px-3 py-2 rounded-md border bg-[#EDEDE9] border-gray-300 focus:outline-none focus:ring focus:ring-yellow-400"
           />
           <input
