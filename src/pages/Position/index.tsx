@@ -17,7 +17,6 @@ export default function Positions() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [positionsList, setPositionsList] = useState<any[]>([]);
 
-  // Toast state
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const API_URL = 'http://127.0.0.1:8000/cargos';
@@ -69,7 +68,6 @@ export default function Positions() {
           body: JSON.stringify({ nome, descricao }),
         });
       } else {
-        // mantido como query params para compatibilidade com backend existente
         res = await fetch(`${API_URL}/?nome=${encodeURIComponent(nome)}&descricao=${encodeURIComponent(descricao)}`, {
           method: 'POST',
         });
@@ -77,14 +75,12 @@ export default function Positions() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        // fechar modal mesmo em erro e usar toast com mensagem do backend se houver
         setOpen(false);
         setEditingId(null);
         addToast(data?.message || 'Erro ao salvar o cargo.', 'error');
         return;
       }
 
-      // sucesso
       setOpen(false);
       setNome('');
       setDescricao('');
@@ -232,7 +228,6 @@ export default function Positions() {
           </tbody>
         </table>
 
-        {/* Toast container */}
         <div className="fixed top-4 right-4 flex flex-col gap-2 z-50">
           {toasts.map((t) => (
             <div
