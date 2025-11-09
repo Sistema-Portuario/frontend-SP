@@ -4,6 +4,8 @@ import { FaTrashAlt } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 
+type ToastItem = { id: number; message: string; type?: 'success' | 'error' | 'info' };
+
 export default function Positions() {
   const [open, setOpen] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -15,15 +17,33 @@ export default function Positions() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [positionsList, setPositionsList] = useState<any[]>([]);
 
+  // Toast state
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
   const API_URL = 'http://127.0.0.1:8000/cargos';
+
+  const addToast = (message: string, type: ToastItem['type'] = 'info', duration = 4000) => {
+    const id = Date.now() + Math.random();
+    setToasts((t) => [...t, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((t) => t.filter((tt) => tt.id !== id));
+    }, duration);
+  };
 
   const fetchCargos = async () => {
     try {
       const res = await fetch(`${API_URL}/`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        addToast(data?.message || 'Erro ao carregar cargos.', 'error');
+        setError('Erro ao carregar cargos.');
+        return;
+      }
       const data = await res.json();
       setPositionsList(data);
     } catch {
       setError('Erro ao carregar cargos.');
+      addToast('Erro ao carregar cargos.', 'error');
     }
   };
 
@@ -33,28 +53,50 @@ export default function Positions() {
 
   const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!nome) return setError('O nome é obrigatório.');
+    setError('');
+    if (!nome) {
+      setError('O nome é obrigatório.');
+      addToast('O nome é obrigatório.', 'error');
+      return;
+    }
 
     try {
+      let res: Response;
       if (editingId) {
-        await fetch(`${API_URL}/${editingId}`, {
+        res = await fetch(`${API_URL}/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nome, descricao }),
         });
       } else {
-        await fetch(`${API_URL}/?nome=${nome}&descricao=${descricao}`, {
+        // mantido como query params para compatibilidade com backend existente
+        res = await fetch(`${API_URL}/?nome=${encodeURIComponent(nome)}&descricao=${encodeURIComponent(descricao)}`, {
           method: 'POST',
         });
       }
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // fechar modal mesmo em erro e usar toast com mensagem do backend se houver
+        setOpen(false);
+        setEditingId(null);
+        addToast(data?.message || 'Erro ao salvar o cargo.', 'error');
+        return;
+      }
+
+      // sucesso
       setOpen(false);
       setNome('');
       setDescricao('');
       setEditingId(null);
-      fetchCargos();
+      await fetchCargos();
       setSuccess(true);
+      addToast(data?.message || 'Cargo salvo com sucesso.', 'success');
       setTimeout(() => setSuccess(false), 3000);
     } catch {
+      setOpen(false);
+      setEditingId(null);
+      addToast('Erro ao salvar o cargo.', 'error');
       setError('Erro ao salvar o cargo.');
     }
   };
@@ -62,10 +104,20 @@ export default function Positions() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await fetch(`${API_URL}/${deleteId}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/${deleteId}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
       setShowDeleteModal(false);
-      fetchCargos();
+      setDeleteId(null);
+      if (!res.ok) {
+        addToast(data?.message || 'Erro ao excluir cargo.', 'error');
+        return;
+      }
+      await fetchCargos();
+      addToast(data?.message || 'Cargo excluído com sucesso.', 'success');
     } catch {
+      setShowDeleteModal(false);
+      setDeleteId(null);
+      addToast('Erro ao excluir cargo.', 'error');
       setError('Erro ao excluir cargo.');
     }
   };
@@ -179,6 +231,20 @@ export default function Positions() {
             ))}
           </tbody>
         </table>
+
+        {/* Toast container */}
+        <div className="fixed top-4 right-4 flex flex-col gap-2 z-50">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              className={`px-4 py-2 rounded shadow text-sm max-w-xs break-words ${
+                t.type === 'success' ? 'bg-green-500 text-white' : t.type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'
+              }`}
+            >
+              {t.message}
+            </div>
+          ))}
+        </div>
       </div>
     </Layout>
   );
