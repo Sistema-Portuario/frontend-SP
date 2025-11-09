@@ -186,7 +186,7 @@ export default function Positions() {
 
         {success && (
           <div className="fixed bottom-4 right-4 bg-yellow-400 px-6 py-3 shadow">
-            ✓ Operação realizada com sucesso!
+            Operação realizada com sucesso!
           </div>
         )}
 
