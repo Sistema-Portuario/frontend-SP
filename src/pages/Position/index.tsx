@@ -2,33 +2,41 @@ import Layout from '../../components/Layout';
 import { MdEdit } from 'react-icons/md';
 import { FaTrashAlt } from 'react-icons/fa';
 import { useState, useEffect, type FormEvent } from 'react';
-import { getCargos, createCargo, updateCargo, deleteCargo, type Cargo } from '../../api/cargoApi';
+
+const API_URL = 'http://127.0.0.1:8000/cargos';
+
+type ToastItem = { id: number; message: string; type?: 'success' | 'error' | 'info' };
 
 export default function Positions() {
-  const [open, setOpen] = useState<boolean>(false);
-  const [success, setSuccess] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true); // Estado de loading
+  const [open, setOpen] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  const [nome, setNome] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [nome, setNome] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  const [positionsList, setPositionsList] = useState<Cargo[]>([]);
+  const [positionsList, setPositionsList] = useState<any[]>([]);
+
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const addToast = (message: string, type: ToastItem['type'] = 'info', duration = 4000) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), duration);
+  };
 
   const fetchPositions = async () => {
-    setLoading(true);
-    setError('');
     try {
-      const data = await getCargos();
-      setPositionsList(data);
-    } catch (err: any) {
-      setError(err.message || 'Falha ao buscar cargos.');
-      setTimeout(() => setError(''), 5000);
-    } finally {
-      setLoading(false);
+      const res = await fetch(`${API_URL}/`);
+      const data = await res.json();
+      if (!res.ok) addToast(data?.message || 'Erro ao carregar cargos', 'error');
+      else setPositionsList(data);
+    } catch {
+      addToast('Erro ao carregar cargos', 'error');
     }
   };
 
@@ -36,244 +44,200 @@ export default function Positions() {
     fetchPositions();
   }, []);
 
-  const handleSave = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!nome || !description) {
+    if (!nome || !descricao) {
       setError('Todos os campos devem ser preenchidos.');
-      setTimeout(() => setError(''), 4000);
+      addToast('Todos os campos devem ser preenchidos', 'error');
       return;
     }
 
-    // Validação de duplicata (mantida)
-    const isDuplicate = positionsList.some((position, idx) => {
-      return (
-        position.nome.toLowerCase() === nome.toLowerCase() &&
-        idx !== editingIndex
-      );
-    });
-
-    if (isDuplicate) {
-      setError('Já existe um cargo com este nome.');
-      setTimeout(() => setError(''), 4000);
+    const duplicate = positionsList.some((c) => c.nome.toLowerCase() === nome.toLowerCase() && c.id !== editingId);
+    if (duplicate) {
+      addToast('Já existe um cargo com este nome', 'error');
       return;
     }
-
-    setError(''); // Limpa erros
 
     try {
-      if (editingIndex !== null) {
-
-        const cargoToUpdate = positionsList[editingIndex];
-        await updateCargo(cargoToUpdate.id, nome, description);
-        setSuccess('Cargo atualizado com sucesso!');
-
+      let res: Response;
+      if (editingId) {
+        res = await fetch(`${API_URL}/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, descricao }),
+        });
       } else {
-        await createCargo(nome, description);
-        setSuccess('Cargo criado com sucesso!');
+        res = await fetch(`${API_URL}/?nome=${encodeURIComponent(nome)}&descricao=${encodeURIComponent(descricao)}`, {
+          method: 'POST',
+        });
       }
 
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        addToast(data?.message || 'Erro ao salvar cargo', 'error');
+        return;
+      }
+
+      addToast(data?.message || 'Cargo salvo com sucesso', 'success');
+      setSuccess(true);
       setOpen(false);
-      setEditingIndex(null);
+      setEditingId(null);
       setNome('');
-      setDescription('');
-      await fetchPositions();
-
-      setTimeout(() => setSuccess(''), 3000);
-
-    } catch (err: any) {
-      setError(err.message || 'Falha ao salvar cargo.');
-      setTimeout(() => setError(''), 5000);
+      setDescricao('');
+      fetchPositions();
+      setTimeout(() => setSuccess(false), 3000);
+    } catch {
+      addToast('Erro ao salvar cargo', 'error');
     }
   };
 
-  const handleConfirmDelete = async () => {
-    if (deleteIndex === null) return; // Segurança
+  const handleDelete = async () => {
+    if (!deleteId) return;
 
     try {
-      const cargoToDelete = positionsList[deleteIndex];
-      await deleteCargo(cargoToDelete.id);
-
-      setSuccess('Cargo excluído com sucesso!');
-      setTimeout(() => setSuccess(''), 3000);
-
+      const res = await fetch(`${API_URL}/${deleteId}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
       setShowDeleteModal(false);
-      setDeleteIndex(null);
-      await fetchPositions(); // Recarrega a lista do banco
-
-    } catch (err: any) {
-      setError(err.message || 'Falha ao excluir o cargo.');
-      setTimeout(() => setError(''), 5000);
-      setShowDeleteModal(false);
+      if (!res.ok) {
+        addToast(data?.message || 'Erro ao excluir cargo', 'error');
+        return;
+      }
+      addToast(data?.message || 'Cargo excluído com sucesso', 'success');
+      setSuccess(true);
+      fetchPositions();
+      setTimeout(() => setSuccess(false), 3000);
+    } catch {
+      addToast('Erro ao excluir cargo', 'error');
     }
   };
 
   return (
     <Layout sidebar={true}>
-      <div className="max-w-4xl min-w-4xl flex flex-col items-center gap-5 pt-8">
-        <div className="w-full flex flex-col gap-8 items-start">
-          <h1 className="text-3xl text-gray-950">
-            Painel de Administrador - Gestão de Cargos
-          </h1>
+      <div className="max-w-4xl flex flex-col items-center gap-5 pt-8">
+        <h1 className="text-3xl text-gray-950">Painel de Administrador - Gestão de Cargos</h1>
 
-          <button
-            className="bg-amber-300 text-sky-950 pl-5 pr-5 pt-1.5 pb-1.5 rounded-[5px] cursor-pointer hover:bg-amber-400 transition"
-            onClick={() => {
-              setNome('');
-              setDescription('');
-              setEditingIndex(null);
-              setOpen(true);
-            }}
-          >
-            Cadastrar Cargo
-          </button>
+        <button
+          className="bg-amber-300 px-5 py-2 rounded hover:bg-amber-400"
+          onClick={() => {
+            setNome('');
+            setDescricao('');
+            setEditingId(null);
+            setOpen(true);
+          }}
+        >
+          Cadastrar Cargo
+        </button>
 
-          {open && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="w-full max-w-sm rounded-none bg-white p-6 shadow-lg">
-                <h2 className="mb-4 text-center text-lg font-normal text-black">
-                  {editingIndex !== null ? 'Editar Cargo' : 'Cadastrar Cargo'}
-                </h2>
-
-                <form onSubmit={handleSave} className="space-y-3">
-                  <input
-                    type="text"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    placeholder="Nome do cargo"
-                    className="w-full rounded-[5px] border border-[#C4C4C4] px-3 py-2 text-sm text-black placeholder-[#C4C4C4] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#C4C4C4]"
-                  />
-
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Descrição do cargo"
-                    className="w-full h-28 rounded-[5px] border border-[#C4C4C4] px-3 py-2 text-sm text-black placeholder-[#C4C4C4] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#C4C4C4]"
-                  ></textarea>
-
-                  {error && (
-                    <div className="rounded-[5px] bg-[#F1D821] px-4 py-2 text-sm text-black shadow">
-                      {error}
-                    </div>
-                  )}
-
-                  <div className="mt-4 flex justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOpen(false);
-                        setError('');
-                      }}
-                      className="rounded-[5px] border border-[#C4C4C4] bg-white px-6 py-2 font-normal text-black shadow hover:bg-gray-100"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="rounded-[5px] bg-[#F1D821] px-6 py-2 font-normal text-black shadow hover:opacity-90"
-                    >
-                      Salvar
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {showDeleteModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="w-full max-w-sm rounded-none bg-white p-6 shadow-lg">
-                <h2 className="mb-4 text-center text-lg font-normal text-black">
-                  Confirmar Exclusão
-                </h2>
-                <p className="mb-4 text-center text-sm text-gray-700">
-                  Tem certeza que deseja excluir este cargo?
-                </p>
-                <div className="flex justify-center gap-3">
-                  <button
-                    className="rounded-[5px] border border-[#C4C4C4] bg-white px-6 py-2 font-normal text-black shadow hover:bg-gray-100"
-                    onClick={() => {
-                      setShowDeleteModal(false);
-                      setDeleteIndex(null);
-                    }}
-                  >
+        {open && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+            <div className="bg-white p-6 w-full max-w-sm shadow-lg">
+              <h2 className="text-lg text-center mb-4">
+                {editingId ? 'Editar Cargo' : 'Cadastrar Cargo'}
+              </h2>
+              <form onSubmit={handleSave} className="space-y-3">
+                <input
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="Nome do cargo"
+                  className="w-full border px-3 py-2"
+                />
+                <textarea
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  placeholder="Descrição"
+                  className="w-full border px-3 py-2 h-24"
+                />
+                {error && <div className="bg-yellow-300 p-2 text-sm">{error}</div>}
+                <div className="flex justify-center gap-3 mt-3">
+                  <button type="button" onClick={() => setOpen(false)} className="border px-6 py-2">
                     Cancelar
                   </button>
-                  <button
-                    className="rounded-[5px] bg-red-500 px-6 py-2 font-normal text-white shadow hover:opacity-90"
-                    onClick={handleConfirmDelete}
-                  >
-                    Excluir
+                  <button type="submit" className="bg-yellow-400 px-6 py-2">
+                    Salvar
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
-          )}
-
-          {success && (
-            <div className="fixed bottom-4 right-4 z-50 rounded-[5px] bg-[#F1D821] px-6 py-3 text-black shadow-lg">
-              {'\u2713'} {success}
-            </div>
-          )}
-        </div>
-
-        {loading ? (
-          <p className="mt-10 text-gray-700">Carregando cargos...</p>
-        ) : (
-          <div className="w-full min-w-[600px] rounded-[5px] overflow-x-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className=" w-30 border border-gray-200 px-4 py-2 text-left text-gray-700">
-                    Nome
-                  </th>
-                  <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
-                    Descrição
-                  </th>
-                  <th className="border border-gray-200 px-4 py-2 text-left text-gray-700">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {positionsList.map((position, index) => (
-                  <tr key={position.id} className="border-t border-gray-200">
-                    <td className="border border-gray-200 px-4 py-2">
-                      {position.nome}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-2">
-                      {position.descricao || '---'}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-2">
-                      <div className="flex justify-center items-center gap-5">
-                        <button
-                          className="text-blue-500 hover:text-blue-700 flex items-center justify-center cursor-pointer"
-                          onClick={() => {
-                            setNome(position.nome);
-                            setDescription(position.descricao || '');
-                            setEditingIndex(index);
-                            Opening_Modal: setOpen(true);
-                          }}
-                        >
-                          <MdEdit color="black" size={20} />
-                        </button>
-                        <button
-                          className="text-red-500 hover:text-red-700 flex items-center justify-center cursor-pointer"
-                          onClick={() => {
-                            setDeleteIndex(index);
-                            setShowDeleteModal(true);
-                          }}
-                        >
-                          <FaTrashAlt size={20} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         )}
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+            <div className="bg-white p-6 w-full max-w-sm shadow-lg">
+              <h2 className="text-center mb-4">Confirmar Exclusão</h2>
+              <div className="flex justify-center gap-3">
+                <button onClick={() => setShowDeleteModal(false)} className="border px-6 py-2">
+                  Cancelar
+                </button>
+                <button onClick={handleDelete} className="bg-red-500 text-white px-6 py-2">
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {success && (
+          <div className="fixed bottom-4 right-4 bg-yellow-400 px-6 py-3 shadow">
+            Operação realizada com sucesso!
+          </div>
+        )}
+
+        <table className="w-full border mt-6">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border px-4 py-2 text-left">Nome</th>
+              <th className="border px-4 py-2 text-left">Descrição</th>
+              <th className="border px-4 py-2 text-left">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {positionsList.map((cargo) => (
+              <tr key={cargo.id}>
+                <td className="border px-4 py-2">{cargo.nome}</td>
+                <td className="border px-4 py-2">{cargo.descricao}</td>
+                <td className="border px-4 py-2 flex gap-4 justify-center">
+                  <button
+                    onClick={() => {
+                      setEditingId(cargo.id);
+                      setNome(cargo.nome);
+                      setDescricao(cargo.descricao);
+                      setOpen(true);
+                    }}
+                  >
+                    <MdEdit size={20} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDeleteId(cargo.id);
+                      setShowDeleteModal(true);
+                    }}
+                  >
+                    <FaTrashAlt size={20} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="fixed top-4 right-4 flex flex-col gap-2 z-50">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              className={`px-4 py-2 rounded shadow text-sm max-w-xs break-words ${
+                t.type === 'success'
+                  ? 'bg-green-500 text-white'
+                  : t.type === 'error'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-800 text-white'
+              }`}
+            >
+              {t.message}
+            </div>
+          ))}
+        </div>
       </div>
     </Layout>
   );
