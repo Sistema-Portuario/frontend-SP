@@ -6,11 +6,11 @@ import {
   Package,
   Truck,
   TrendingUp,
-  TrendingDown,
   MoreVertical,
   RefreshCw,
   AlertCircle,
   Settings,
+  Activity,
 } from 'lucide-react';
 import {
   LineChart,
@@ -23,7 +23,32 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import Layout from '../../components/Layout';
-import { getLogisticsStats, type LogisticsStats } from '../../api/logisticsApi';
+import {
+  getDashboardLogs,
+  getGraphResponse,
+  getLogisticsStats,
+  type LogEntry,
+  type LogisticsStats,
+  type StatusOperacional,
+} from '../../api/logisticsApi';
+
+
+// Interfaces para o estado dos gráficos (formatado para o Recharts)
+interface ChartDataNavio {
+  day: string;
+  chegados: number;
+  saidos: number;
+}
+
+interface ChartDataContainer {
+  day: string;
+  quantidade: number;
+}
+
+interface ChartDataCaminhao {
+  day: string;
+  ativos: number;
+}
 
 const AdminDashboard = () => {
   const [data, setData] = useState<LogisticsStats>({
@@ -32,43 +57,57 @@ const AdminDashboard = () => {
     containersPatio: 22,
     caminhoesAtivos: 40,
   });
+
+  // ESTADOS PARA OS GRÁFICOS (Substituindo os arrays estáticos)
+  const [naviosData, setNaviosData] = useState<ChartDataNavio[]>([]);
+  const [containersData, setContainersData] = useState<ChartDataContainer[]>([]);
+  const [caminhoesData, setCaminhoesData] = useState<ChartDataCaminhao[]>([]);
+
+  const [logsList, setLogsList] = useState<LogEntry[]>([]);
+  const [statusOp, setStatusOp] = useState<StatusOperacional>({
+    status: 'Carregando...',
+    nivel: 0,
+  });
+
+  // Função auxiliar para definir ícone e cor baseado no texto do evento
+  const getLogStyle = (evento: string) => {
+    if (evento.toLowerCase().includes('navio')) {
+      return { 
+        icon: <Ship className="w-4 h-4 text-blue-600" />, 
+        bg: 'bg-blue-100',
+        dot: 'bg-blue-500'
+      };
+    }
+    if (evento.toLowerCase().includes('contêiner') || evento.toLowerCase().includes('conteiner')) {
+      return { 
+        icon: <Package className="w-4 h-4 text-purple-600" />, 
+        bg: 'bg-purple-100',
+        dot: 'bg-purple-500'
+      };
+    }
+    // Default
+    return { 
+      icon: <Activity className="w-4 h-4 text-gray-600" />, 
+      bg: 'bg-gray-100',
+      dot: 'bg-gray-400'
+    };
+  };
+
+  // Função auxiliar para transformar "06/12" em "Sex"
+  const formatDay = (dataStr: string) => {
+    const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const [dia, mes] = dataStr.split('/');
+    const currentYear = new Date().getFullYear();
+    const dataObj = new Date(currentYear, Number(mes) - 1, Number(dia));
+    return diasSemana[dataObj.getDay()];
+  };
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30);
   const [showSettings, setShowSettings] = useState(false);
-
-  // Dados históricos para gráficos
-  const historicalNavios = [
-    { day: 'Seg', chegados: 15, saidos: 12 },
-    { day: 'Ter', chegados: 18, saidos: 14 },
-    { day: 'Qua', chegados: 22, saidos: 19 },
-    { day: 'Qui', chegados: 20, saidos: 17 },
-    { day: 'Sex', chegados: 25, saidos: 22 },
-    { day: 'Sáb', chegados: 16, saidos: 15 },
-    { day: 'Dom', chegados: 19, saidos: 16 },
-  ];
-
-  const historicalContainers = [
-    { day: 'Seg', quantidade: 520 },
-    { day: 'Ter', quantidade: 580 },
-    { day: 'Qua', quantidade: 550 },
-    { day: 'Qui', quantidade: 620 },
-    { day: 'Sex', quantidade: 590 },
-    { day: 'Sáb', quantidade: 480 },
-    { day: 'Dom', quantidade: 510 },
-  ];
-
-  const historicalCaminhoes = [
-    { day: 'Seg', ativos: 35 },
-    { day: 'Ter', ativos: 42 },
-    { day: 'Qua', ativos: 38 },
-    { day: 'Qui', ativos: 45 },
-    { day: 'Sex', ativos: 40 },
-    { day: 'Sáb', ativos: 28 },
-    { day: 'Dom', ativos: 32 },
-  ];
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -78,9 +117,53 @@ const AdminDashboard = () => {
     setLastUpdate(new Date());
 
     try {
-      const apiData = await getLogisticsStats();
+      const [apiData, graphData, logsData] = await Promise.all([
+        getLogisticsStats(),
+        getGraphResponse(),
+        getDashboardLogs(),
+      ]);
 
       setData(apiData);
+
+      // PROCESSAMENTO DOS DADOS DOS GRÁFICOS
+      if (graphData) {
+        // Navios (mantém chaves chegadas/saidas)
+        if (graphData.movimentacao_navios) {
+          setNaviosData(
+            graphData.movimentacao_navios.map((item) => ({
+              day: formatDay(item.data),
+              chegados: item.chegadas,
+              saidos: item.saidas,
+            }))
+          );
+        }
+
+        // Contêineres (API retorna 'total', gráfico espera 'quantidade')
+        if (graphData.ocupacao_patio) {
+          setContainersData(
+            graphData.ocupacao_patio.map((item) => ({
+              day: formatDay(item.data),
+              quantidade: item.total, // <--- Mapeamento importante
+            }))
+          );
+        }
+
+        // Caminhões (API retorna 'total', gráfico espera 'ativos')
+        if (graphData.caminhoes_ativos) {
+          setCaminhoesData(
+            graphData.caminhoes_ativos.map((item) => ({
+              day: formatDay(item.data),
+              ativos: item.total, // <--- Mapeamento importante
+            }))
+          );
+        }
+      }
+
+      // ATUALIZAÇÃO DOS LOGS E STATUS
+      if (logsData) {
+        setLogsList(logsData.logs);
+        setStatusOp(logsData.status_operacional);
+      }
     } catch (error) {
       setError(
         'Falha na comunicação com o servidor. Verifique a conexão e tente novamente.'
@@ -110,7 +193,7 @@ const AdminDashboard = () => {
   return (
     <Layout sidebar={true}>
       <div className="flex h-full w-full flex-col overflow-hidden">
-        <div className='flex-shrink-0'>
+        <div className="flex-shrink-0">
           {/* Header */}
           <div className="relative z-10 px-8 py-6">
             <div className="flex items-center justify-between mb-2">
@@ -189,7 +272,9 @@ const AdminDashboard = () => {
                     <label className="text-sm text-gray-600">Intervalo:</label>
                     <select
                       value={refreshInterval}
-                      onChange={(e) => setRefreshInterval(Number(e.target.value))}
+                      onChange={(e) =>
+                        setRefreshInterval(Number(e.target.value))
+                      }
                       disabled={!autoRefresh}
                       className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -239,11 +324,6 @@ const AdminDashboard = () => {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {data.naviosChegados}
               </h3>
-              <div className="flex items-center text-sm">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">+12%</span>
-                <span className="text-gray-400 ml-1">vs semana anterior</span>
-              </div>
             </div>
 
             {/* Navios Saídos */}
@@ -260,11 +340,6 @@ const AdminDashboard = () => {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {data.naviosSaidos}
               </h3>
-              <div className="flex items-center text-sm">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">+8%</span>
-                <span className="text-gray-400 ml-1">vs semana anterior</span>
-              </div>
             </div>
 
             {/* Contêineres no Pátio */}
@@ -281,11 +356,6 @@ const AdminDashboard = () => {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {data.containersPatio}
               </h3>
-              <div className="flex items-center text-sm">
-                <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
-                <span className="text-red-500 font-medium">-3%</span>
-                <span className="text-gray-400 ml-1">vs ontem</span>
-              </div>
             </div>
 
             {/* Caminhões Ativos */}
@@ -302,11 +372,6 @@ const AdminDashboard = () => {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {data.caminhoesAtivos}
               </h3>
-              <div className="flex items-center text-sm">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">+15%</span>
-                <span className="text-gray-400 ml-1">vs ontem</span>
-              </div>
             </div>
           </div>
 
@@ -321,7 +386,7 @@ const AdminDashboard = () => {
                 Chegadas e saídas semanais
               </p>
               <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={historicalNavios}>
+                <BarChart data={naviosData}>
                   <XAxis
                     dataKey="day"
                     axisLine={false}
@@ -370,7 +435,7 @@ const AdminDashboard = () => {
                 Volume de contêineres armazenados
               </p>
               <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={historicalContainers}>
+                <LineChart data={containersData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
                     dataKey="day"
@@ -416,7 +481,7 @@ const AdminDashboard = () => {
                 Atividade de transporte semanal
               </p>
               <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={historicalCaminhoes}>
+                <LineChart data={caminhoesData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
                     dataKey="day"
@@ -472,14 +537,15 @@ const AdminDashboard = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-gray-600 mb-2">
-                    Operação funcionando normalmente
+                    {statusOp.status}
                   </p>
                   <div className="w-full bg-gray-100 rounded-full h-1.5">
                     <div
                       className="bg-green-600 h-1.5 rounded-full"
-                      style={{ width: '95%' }}
+                      style={{ width: `${statusOp.nivel}%` }}
                     ></div>
                   </div>
+                  <p className="text-xs text-gray-400 mt-1 text-right">{statusOp.nivel}% Otimizado</p>
                 </div>
               </div>
             </div>
@@ -499,49 +565,41 @@ const AdminDashboard = () => {
                   <MoreVertical className="w-5 h-5" />
                 </button>
               </div>
-              <div className="space-y-4 mt-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full mt-1.5"></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">
-                      Navio MV Ocean Star atracado
-                    </p>
-                    <p className="text-xs text-gray-400">Hoje às 08:30</p>
-                  </div>
-                </div>
 
-                {lastUpdate && (
-                  <>
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-1.5"></div>
-                      <div>
+              <div className="space-y-4 mt-6 max-h-[300px] overflow-y-auto pr-2">
+                {logsList.map((log, index) => {
+                  const style = getLogStyle(log.evento);
+
+                  return (
+                    <div key={index} className="flex items-start gap-3">
+                      {/* Bolinha Colorida Dinâmica */}
+                      <div
+                        className={`w-2 h-2 ${style.dot} rounded-full mt-1.5 flex-shrink-0`}
+                      ></div>
+
+                      <div className="flex-1">
                         <p className="text-sm font-medium text-gray-800">
-                          Registro de {data.containersPatio} contêineres no
-                          pátio
+                          {log.evento}:{' '}
+                          <span className="font-normal text-gray-600">
+                            {log.descricao}
+                          </span>
                         </p>
                         <p className="text-xs text-gray-400">
-                          {formatDistanceToNow(lastUpdate, {
+                          {/* Formatação de Data Relativa (ex: há 2 horas) */}
+                          {formatDistanceToNow(new Date(log.data_hora), {
                             addSuffix: true,
                             locale: ptBR,
                           })}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-1.5"></div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">
-                          Registro de {data.caminhoesAtivos} caminhões ativos
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {formatDistanceToNow(lastUpdate, {
-                            addSuffix: true,
-                            locale: ptBR,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </>
+                  );
+                })}
+
+                {logsList.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-4">
+                    Nenhum log registrado hoje.
+                  </p>
                 )}
               </div>
             </div>
