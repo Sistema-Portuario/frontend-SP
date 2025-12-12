@@ -7,7 +7,7 @@ export interface LogisticsStats {
   caminhoesAtivos: number;
 }
 
-const API_URL = '/api/logistica/estatisticas';
+const API_URL = '/dashboard/kpis';
 
 export const getLogisticsStats = async (): Promise<LogisticsStats> => {
   
