@@ -39,7 +39,7 @@ export const postRequest = async <T, U>(url: string, data: U): Promise<T> => {
   }
 };
 
-const BASE_URL = 'http://127.0.0.1:8000';
+const BASE_URL = 'http://localhost:8000';
 
 const getToken = (): string | null => {
   return window.localStorage.getItem('token');
