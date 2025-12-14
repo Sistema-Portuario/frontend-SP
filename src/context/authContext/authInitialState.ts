@@ -5,7 +5,7 @@ export const authInitialState = {
     name: '',
     password: '',
     email: '',
-    role: 'admin',
+    role: 'employee',
     position: '',
   },
 

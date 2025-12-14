@@ -191,7 +191,7 @@ const AdminDashboard = () => {
   }, [autoRefresh, refreshInterval]);
 
   return (
-    <Layout sidebar={true}>
+    <Layout sidebar={true} type='admin'>
       <div className="flex h-full w-full flex-col overflow-hidden">
         <div className="flex-shrink-0">
           {/* Header */}
