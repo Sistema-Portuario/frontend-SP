@@ -70,7 +70,7 @@ export default function Operators() {
 
   const selectTextClass = cargo ? "text-black" : "text-[#C4C4C4]";
   return (
-    <Layout sidebar={true}>
+    <Layout sidebar={true} type='admin'>
       <div className="max-w-4xl min-w-4xl flex flex-col items-center gap-5 pt-8">
         <div className="w-full flex flex-col gap-8 items-start">
           <h1 className="text-3xl text-gray-950">
