@@ -1,7 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import { FaHome } from 'react-icons/fa';
-import { IoMdPerson } from 'react-icons/io';
-import { MdWork } from "react-icons/md";
 
 import logo from '../../../assets/logo.png';
 
@@ -15,34 +13,12 @@ const EmployeeSidebar = () => {
       <ul className="flex flex-col p-4 space-y-2 mt-5 pl-7">
         <li>
           <NavLink
-            to="/"
+            to="/employee"
             className="block px-4 py-2 rounded hover:bg-sky-950 transition-colors"
           >
             <div className="flex justify-start items-center gap-3.5">
               <FaHome size={24} color="#F1D821" />
               Dashboard
-            </div>
-          </NavLink>
-        </li>
-        <li>
-          <NavLink
-            to="/operators"
-            className="block px-4 py-2 rounded hover:bg-sky-950 transition-colors"
-          >
-            <div className="flex justify-start items-center gap-3.5">
-              <IoMdPerson size={24} color="#F1D821" />
-              Operadores
-            </div>
-          </NavLink>
-        </li>
-        <li>
-          <NavLink
-            to="/positions"
-            className="block px-4 py-2 rounded hover:bg-sky-950 transition-colors"
-          >
-            <div className="flex justify-start items-center gap-3.5">
-              <MdWork size={24} color="#F1D821" />
-              Cargos
             </div>
           </NavLink>
         </li>

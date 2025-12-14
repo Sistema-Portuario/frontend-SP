@@ -6,7 +6,7 @@ export const authInitialState = {
     password: '',
     email: '',
     role: 'employee',
-    position: '',
+    position: 'truckDriver',
   },
 
   authenticate: true,
