@@ -52,10 +52,10 @@ interface ChartDataCaminhao {
 
 const AdminDashboard = () => {
   const [data, setData] = useState<LogisticsStats>({
-    naviosChegados: 18,
-    naviosSaidos: 14,
-    containersPatio: 22,
-    caminhoesAtivos: 40,
+    naviosChegados: 0,
+    naviosSaidos: 0,
+    containersPatio: 0,
+    caminhoesAtivos: 0,
   });
 
   // ESTADOS PARA OS GRÁFICOS (Substituindo os arrays estáticos)

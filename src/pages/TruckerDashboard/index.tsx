@@ -40,14 +40,16 @@ interface ChartDataCaminhao {
 
 const AdminDashboard = () => {
   const [data, setData] = useState<LogisticsStats>({
-    naviosChegados: 18,
-    naviosSaidos: 14,
-    containersPatio: 22,
-    caminhoesAtivos: 40,
+    naviosChegados: 0,
+    naviosSaidos: 0,
+    containersPatio: 0,
+    caminhoesAtivos: 0,
   });
 
   // ESTADOS PARA OS GRÁFICOS (Substituindo os arrays estáticos)
-  const [containersData, setContainersData] = useState<ChartDataContainer[]>([]);
+  const [containersData, setContainersData] = useState<ChartDataContainer[]>(
+    []
+  );
   const [caminhoesData, setCaminhoesData] = useState<ChartDataCaminhao[]>([]);
 
   const [logsList, setLogsList] = useState<LogEntry[]>([]);
@@ -55,24 +57,27 @@ const AdminDashboard = () => {
   // Função auxiliar para definir ícone e cor baseado no texto do evento
   const getLogStyle = (evento: string) => {
     if (evento.toLowerCase().includes('navio')) {
-      return { 
-        icon: <Ship className="w-4 h-4 text-blue-600" />, 
+      return {
+        icon: <Ship className="w-4 h-4 text-blue-600" />,
         bg: 'bg-blue-100',
-        dot: 'bg-blue-500'
+        dot: 'bg-blue-500',
       };
     }
-    if (evento.toLowerCase().includes('contêiner') || evento.toLowerCase().includes('conteiner')) {
-      return { 
-        icon: <Package className="w-4 h-4 text-purple-600" />, 
+    if (
+      evento.toLowerCase().includes('contêiner') ||
+      evento.toLowerCase().includes('conteiner')
+    ) {
+      return {
+        icon: <Package className="w-4 h-4 text-purple-600" />,
         bg: 'bg-purple-100',
-        dot: 'bg-purple-500'
+        dot: 'bg-purple-500',
       };
     }
     // Default
-    return { 
-      icon: <Activity className="w-4 h-4 text-gray-600" />, 
+    return {
+      icon: <Activity className="w-4 h-4 text-gray-600" />,
       bg: 'bg-gray-100',
-      dot: 'bg-gray-400'
+      dot: 'bg-gray-400',
     };
   };
 
@@ -110,7 +115,6 @@ const AdminDashboard = () => {
 
       // PROCESSAMENTO DOS DADOS DOS GRÁFICOS
       if (graphData) {
-
         // Contêineres (API retorna 'total', gráfico espera 'quantidade')
         if (graphData.ocupacao_patio) {
           setContainersData(
@@ -134,7 +138,25 @@ const AdminDashboard = () => {
 
       // ATUALIZAÇÃO DOS LOGS E STATUS
       if (logsData) {
-        setLogsList(logsData.logs);
+
+        const normalizarTexto = (texto: string) => {
+          return texto
+            .toLowerCase() // Converte para minúsculo
+            .normalize('NFD') // Decomposição canônica (separa 'ê' em 'e' + '^')
+            .replace(/[\u0300-\u036f]/g, ''); // Remove os diacríticos (acentos)
+        };
+
+        const dadosFiltrados = logsData.logs.filter((item) => {
+          // Limpa o evento atual para comparação segura
+          const eventoLimpo = normalizarTexto(item.evento);
+
+          return (
+            eventoLimpo.includes('caminhoes') || eventoLimpo.includes('caminhao') || eventoLimpo.includes('conteiner') || eventoLimpo.includes('conteiners')
+          );
+        });
+
+        setLogsList(dadosFiltrados);
+
       }
     } catch (error) {
       setError(
@@ -163,7 +185,7 @@ const AdminDashboard = () => {
   }, [autoRefresh, refreshInterval]);
 
   return (
-    <Layout sidebar={true} type='employee'>
+    <Layout sidebar={true} type="employee">
       <div className="flex h-full w-full flex-col overflow-hidden">
         <div className="flex-shrink-0">
           {/* Header */}
@@ -284,7 +306,6 @@ const AdminDashboard = () => {
           {/* Stats Cards - Indicadores Principais */}
           {/* MODIFICADO: Ajustado para grid-cols-2 para preencher melhor o espaço */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-
             {/* Contêineres no Pátio */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <div className="flex items-start justify-between mb-4">
@@ -320,7 +341,6 @@ const AdminDashboard = () => {
 
           {/* Charts Row - Visualizações Gráficas */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
             {/* Contêineres no Pátio */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-base font-bold text-gray-800 mb-1">
