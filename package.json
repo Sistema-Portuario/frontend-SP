@@ -19,15 +19,34 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react-swc": "^4.0.0",
+    "cypress": "^15.7.1",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "jsdom": "^27.3.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
-  }
+    "vite": "^7.1.2",
+    "vitest": "^4.0.15"
+  },
+  "description": "Sistema portuário para organizar e controlar contêineres no pátio, permitindo localizar, gerenciar entradas e saídas, visualizar o layout do pátio e acompanhar o histórico de movimentações de forma rápida e intuitiva. Desenvolvido em React para uma interface moderna e fácil de usar.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sistema-Portuario/frontend-SP.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sistema-Portuario/frontend-SP/issues"
+  },
+  "homepage": "https://github.com/Sistema-Portuario/frontend-SP#readme"
 }

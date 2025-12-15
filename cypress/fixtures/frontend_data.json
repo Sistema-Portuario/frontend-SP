@@ -1,0 +1,47 @@
+[
+  {
+    "suite": "Gestão Completa de Operadores (CRUD)",
+    "cases": [
+      {
+        "id": "OP01",
+        "desc": "Abrir Modal de Cadastro",
+        "action": "open_modal",
+        "target_button": "Cadastrar Operador",
+        "expect_text": "Cadastrar Operador"
+      },
+      {
+        "id": "OP02",
+        "desc": "Validar Campos Vazios",
+        "action": "submit_form",
+        "input_nome": "",
+        "input_email": "",
+        "expect_error": "Todos os campos devem ser preenchidos"
+      },
+      {
+        "id": "OP03",
+        "desc": "Cadastrar Novo Operador",
+        "action": "submit_form",
+        "input_nome": "Usuario Persistente",
+        "input_email": "persistente@exemplo.com",
+        "input_cargo": "cargo1",
+        "expect_text": "Alterações salvas com sucesso"
+      },
+      {
+        "id": "ED01",
+        "desc": "Editar Operador Recém-Criado",
+        "action": "edit_user",
+        "target_user": "Usuario Persistente",
+        "input_nome": "Usuario Editado",
+        "expect_text": "Alterações salvas com sucesso"
+      },
+      {
+        "id": "DEL01",
+        "desc": "Excluir Operador Editado",
+        "action": "delete_user",
+        "target_user": "Usuario Editado",
+        "expect_text": "Confirmar Exclusão",
+        "confirm_delete": true
+      }
+    ]
+  }
+]

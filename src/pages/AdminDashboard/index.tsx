@@ -4,6 +4,11 @@ import { FaTrashAlt } from 'react-icons/fa';
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+export const validateEmail = (email: string): boolean => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email.toLowerCase());
+};
+
 export default function AdminDashboard() {
   const [open, setOpen] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
@@ -26,10 +31,6 @@ export default function AdminDashboard() {
     { nome: 'Lorem ipsum', email: 'loremispsum@gmail.com', status: 'Ativo', cargo: 'cargo2' },
   ]);
 
-  const validateEmail = (email: string): boolean => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email.toLowerCase());
-  };
 
   const handleSave = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -91,7 +92,7 @@ export default function AdminDashboard() {
                 <h2 className="mb-4 text-center text-lg font-normal text-black">
                   {editingIndex !== null ? "Editar Operador" : "Cadastrar Operador"}
                 </h2>
-                <form onSubmit={handleSave} className="space-y-3">
+                <form noValidate onSubmit={handleSave} className="space-y-3">
                   <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome completo"
                   className="w-full rounded-[5px] border border-[#C4C4C4] px-3 py-2 text-sm text-black placeholder-[#C4C4C4] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#C4C4C4] focus:border-[#C4C4C4]"/>
                   
@@ -113,7 +114,7 @@ export default function AdminDashboard() {
                   </select>
 
                   {error && (
-                    <div className="rounded-[5px] bg-[#F1D821] px-4 py-2 text-sm text-black shadow"> {error} </div>
+                    <div role="alert" className="rounded-[5px] bg-[#F1D821] px-4 py-2 text-sm text-black shadow"> {error} </div>
                   )}
 
                   <div className="mt-4 flex justify-center gap-3">
@@ -163,7 +164,7 @@ export default function AdminDashboard() {
       )}
 
       {success && (
-        <div className="fixed bottom-4 right-4 z-50 rounded-[5px] bg-[#F1D821] px-6 py-3 text-black shadow-lg">
+        <div role="status" className="fixed bottom-4 right-4 z-50 rounded-[5px] bg-[#F1D821] px-6 py-3 text-black shadow-lg">
           {"\u2713"} Alterações salvas com sucesso!
         </div>
       )}
