@@ -6,6 +6,7 @@ import PrivateRouteEmployee from '../components/HOC/PrivateRouteEmployee';
 import Position from '../pages/Position';
 import Operators from '../pages/Operators';
 import EmployeeDashboardSwitcher from '../pages/EmployeeDashboardSwitcher';
+import OperatorDashboardSwitcher from '../pages/OperatorDashboardSwitcher';
 
 export const RoutesApp = () => {
   return (
@@ -14,6 +15,7 @@ export const RoutesApp = () => {
       <Route path="/operators" element={<PrivateRouteAdmin element={Operators}/>} />
       <Route path="/positions" element={<PrivateRouteAdmin element={Position}/>} />
       <Route path="/employee" element={<PrivateRouteEmployee element={EmployeeDashboardSwitcher}/>} />
+      <Route path="/operator" element={<PrivateRouteEmployee element={OperatorDashboardSwitcher}/>} />
       <Route path="/login" element={<Login />} /> 
     </Routes>
   );
