@@ -1,11 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
 import AdminDashboard from '../pages/AdminDashboard';
 import Login from '../pages/Login';
-import Employee from '../pages/Employee';
 import PrivateRouteAdmin from '../components/HOC/PrivateRouteAdmin';
 import PrivateRouteEmployee from '../components/HOC/PrivateRouteEmployee';
 import Position from '../pages/Position';
 import Operators from '../pages/Operators';
+import EmployeeDashboardSwitcher from '../pages/EmployeeDashboardSwitcher';
+import OperatorDashboardSwitcher from '../pages/OperatorDashboardSwitcher';
 
 export const RoutesApp = () => {
   return (
@@ -13,7 +14,8 @@ export const RoutesApp = () => {
       <Route path="/" element={<PrivateRouteAdmin element={AdminDashboard}/>} />
       <Route path="/operators" element={<PrivateRouteAdmin element={Operators}/>} />
       <Route path="/positions" element={<PrivateRouteAdmin element={Position}/>} />
-      <Route path="/employee" element={<PrivateRouteEmployee element={Employee}/>} />
+      <Route path="/employee" element={<PrivateRouteEmployee element={EmployeeDashboardSwitcher}/>} />
+      <Route path="/operator" element={<PrivateRouteEmployee element={OperatorDashboardSwitcher}/>} />
       <Route path="/login" element={<Login />} /> 
     </Routes>
   );

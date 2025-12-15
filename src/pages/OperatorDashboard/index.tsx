@@ -5,23 +5,12 @@ import {
   Ship,
   Package,
   Truck,
-  TrendingUp,
   MoreVertical,
   RefreshCw,
   AlertCircle,
   Settings,
   Activity,
 } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
 import Layout from '../../components/Layout';
 import {
   getDashboardLogs,
@@ -29,16 +18,7 @@ import {
   getLogisticsStats,
   type LogEntry,
   type LogisticsStats,
-  type StatusOperacional,
 } from '../../api/logisticsApi';
-
-
-// Interfaces para o estado dos gráficos (formatado para o Recharts)
-interface ChartDataNavio {
-  day: string;
-  chegados: number;
-  saidos: number;
-}
 
 interface ChartDataContainer {
   day: string;
@@ -59,37 +39,37 @@ const AdminDashboard = () => {
   });
 
   // ESTADOS PARA OS GRÁFICOS (Substituindo os arrays estáticos)
-  const [naviosData, setNaviosData] = useState<ChartDataNavio[]>([]);
-  const [containersData, setContainersData] = useState<ChartDataContainer[]>([]);
+  const [containersData, setContainersData] = useState<ChartDataContainer[]>(
+    []
+  );
   const [caminhoesData, setCaminhoesData] = useState<ChartDataCaminhao[]>([]);
 
   const [logsList, setLogsList] = useState<LogEntry[]>([]);
-  const [statusOp, setStatusOp] = useState<StatusOperacional>({
-    status: 'Carregando...',
-    nivel: 0,
-  });
 
   // Função auxiliar para definir ícone e cor baseado no texto do evento
   const getLogStyle = (evento: string) => {
     if (evento.toLowerCase().includes('navio')) {
-      return { 
-        icon: <Ship className="w-4 h-4 text-blue-600" />, 
+      return {
+        icon: <Ship className="w-4 h-4 text-blue-600" />,
         bg: 'bg-blue-100',
-        dot: 'bg-blue-500'
+        dot: 'bg-blue-500',
       };
     }
-    if (evento.toLowerCase().includes('contêiner') || evento.toLowerCase().includes('conteiner')) {
-      return { 
-        icon: <Package className="w-4 h-4 text-purple-600" />, 
+    if (
+      evento.toLowerCase().includes('contêiner') ||
+      evento.toLowerCase().includes('conteiner')
+    ) {
+      return {
+        icon: <Package className="w-4 h-4 text-purple-600" />,
         bg: 'bg-purple-100',
-        dot: 'bg-purple-500'
+        dot: 'bg-purple-500',
       };
     }
     // Default
-    return { 
-      icon: <Activity className="w-4 h-4 text-gray-600" />, 
+    return {
+      icon: <Activity className="w-4 h-4 text-gray-600" />,
       bg: 'bg-gray-100',
-      dot: 'bg-gray-400'
+      dot: 'bg-gray-400',
     };
   };
 
@@ -127,17 +107,6 @@ const AdminDashboard = () => {
 
       // PROCESSAMENTO DOS DADOS DOS GRÁFICOS
       if (graphData) {
-        // Navios (mantém chaves chegadas/saidas)
-        if (graphData.movimentacao_navios) {
-          setNaviosData(
-            graphData.movimentacao_navios.map((item) => ({
-              day: formatDay(item.data),
-              chegados: item.chegadas,
-              saidos: item.saidas,
-            }))
-          );
-        }
-
         // Contêineres (API retorna 'total', gráfico espera 'quantidade')
         if (graphData.ocupacao_patio) {
           setContainersData(
@@ -161,8 +130,25 @@ const AdminDashboard = () => {
 
       // ATUALIZAÇÃO DOS LOGS E STATUS
       if (logsData) {
-        setLogsList(logsData.logs);
-        setStatusOp(logsData.status_operacional);
+
+        const normalizarTexto = (texto: string) => {
+          return texto
+            .toLowerCase() // Converte para minúsculo
+            .normalize('NFD') // Decomposição canônica (separa 'ê' em 'e' + '^')
+            .replace(/[\u0300-\u036f]/g, ''); // Remove os diacríticos (acentos)
+        };
+
+        const dadosFiltrados = logsData.logs.filter((item) => {
+          // Limpa o evento atual para comparação segura
+          const eventoLimpo = normalizarTexto(item.evento);
+
+          return (
+            eventoLimpo.includes('caminhoes') || eventoLimpo.includes('caminhao') || eventoLimpo.includes('conteiner') || eventoLimpo.includes('conteiners')
+          );
+        });
+
+        setLogsList(dadosFiltrados);
+
       }
     } catch (error) {
       setError(
@@ -191,7 +177,7 @@ const AdminDashboard = () => {
   }, [autoRefresh, refreshInterval]);
 
   return (
-    <Layout sidebar={true} type='admin'>
+    <Layout sidebar={true} type="employee">
       <div className="flex h-full w-full flex-col overflow-hidden">
         <div className="flex-shrink-0">
           {/* Header */}
@@ -223,7 +209,7 @@ const AdminDashboard = () => {
               </div>
             </div>
             <h1 className="text-xl font-bold text-gray-800 mb-1">
-              Dashboard Operacional
+              Dashboard - Operador
             </h1>
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">
@@ -308,40 +294,10 @@ const AdminDashboard = () => {
               </div>
             </div>
           )}
+
           {/* Stats Cards - Indicadores Principais */}
-          <div className="grid grid-cols-4 gap-6 mb-8">
-            {/* Navios Chegados */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                  <Ship className="w-6 h-6 text-white" />
-                </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mb-2">Navios Chegados</p>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {data.naviosChegados}
-              </h3>
-            </div>
-
-            {/* Navios Saídos */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center">
-                  <Ship className="w-6 h-6 text-white transform scale-x-[-1]" />
-                </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mb-2">Navios Saídos</p>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {data.naviosSaidos}
-              </h3>
-            </div>
-
+          {/* MODIFICADO: Ajustado para grid-cols-2 para preencher melhor o espaço */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Contêineres no Pátio */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <div className="flex items-start justify-between mb-4">
@@ -352,13 +308,13 @@ const AdminDashboard = () => {
                   <MoreVertical className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mb-2">Contêineres no Pátio</p>
+              <p className="text-sm text-gray-500 mb-2">Carga para descarregar</p>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 {data.containersPatio}
               </h3>
             </div>
 
-            {/* Caminhões Ativos */}
+            {/* Navios chegados */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl flex items-center justify-center">
@@ -368,190 +324,17 @@ const AdminDashboard = () => {
                   <MoreVertical className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mb-2">Caminhões Ativos</p>
+              <p className="text-sm text-gray-500 mb-2">Navios Chegados</p>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {data.caminhoesAtivos}
+                {data.naviosChegados}
               </h3>
             </div>
           </div>
 
           {/* Charts Row - Visualizações Gráficas */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            {/* Movimentação de Navios */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-base font-bold text-gray-800 mb-1">
-                Movimentação de Navios
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                Chegadas e saídas semanais
-              </p>
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={naviosData}>
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: '#9ca3af' }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                  />
-                  <Bar
-                    dataKey="chegados"
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
-                    name="Chegados"
-                  />
-                  <Bar
-                    dataKey="saidos"
-                    fill="#10b981"
-                    radius={[4, 4, 0, 0]}
-                    name="Saídos"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-              {lastUpdate && (
-                <p className="text-xs text-gray-400 mt-3">
-                  🕐 atualizado há{' '}
-                  {formatDistanceToNow(lastUpdate, {
-                    addSuffix: true,
-                    locale: ptBR,
-                  })}
-                </p>
-              )}
-            </div>
-
-            {/* Contêineres no Pátio */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-base font-bold text-gray-800 mb-1">
-                Ocupação do Pátio
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                Volume de contêineres armazenados
-              </p>
-              <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={containersData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: '#9ca3af' }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="quantidade"
-                    stroke="#8b5cf6"
-                    strokeWidth={2}
-                    dot={false}
-                    name="Contêineres"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              {lastUpdate && (
-                <p className="text-xs text-gray-400 mt-3">
-                  🕐 atualizado há{' '}
-                  {formatDistanceToNow(lastUpdate, {
-                    addSuffix: true,
-                    locale: ptBR,
-                  })}
-                </p>
-              )}
-            </div>
-
-            {/* Caminhões em Operação */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h3 className="text-base font-bold text-gray-800 mb-1">
-                Caminhões em Operação
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                Atividade de transporte semanal
-              </p>
-              <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={caminhoesData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: '#9ca3af' }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="ativos"
-                    stroke="#f97316"
-                    strokeWidth={2}
-                    dot={false}
-                    name="Ativos"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              {lastUpdate && (
-                <p className="text-xs text-gray-400 mt-3">
-                  🕐 atualizado há{' '}
-                  {formatDistanceToNow(lastUpdate, {
-                    addSuffix: true,
-                    locale: ptBR,
-                  })}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Bottom Row - Resumo Operacional */}
-          <div className="grid grid-cols-3 gap-6">
-            {/* Status Operacional */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-bold text-gray-800">
-                  Status Operacional
-                </h3>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 mb-2">
-                    {statusOp.status}
-                  </p>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div
-                      className="bg-green-600 h-1.5 rounded-full"
-                      style={{ width: `${statusOp.nivel}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1 text-right">{statusOp.nivel}% Otimizado</p>
-                </div>
-              </div>
-            </div>
-
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* Atividades Recentes */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm col-span-2">
+            <div className="bg-white rounded-2xl p-6 shadow-sm w-full">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-base font-bold text-gray-800 mb-1">

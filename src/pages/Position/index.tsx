@@ -113,7 +113,7 @@ export default function Positions() {
   };
 
   return (
-    <Layout sidebar={true}>
+    <Layout sidebar={true} type='admin'>
       <div className="max-w-4xl flex flex-col items-center gap-5 pt-8">
         <h1 className="text-3xl text-gray-950">Painel de Administrador - Gestão de Cargos</h1>
 
